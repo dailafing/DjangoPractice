@@ -21,7 +21,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load Env vars
 env = Env()
-env.read_env(os.path.join(BASE_DIR, 'env'))
+# env.read_env(os.path.join(BASE_DIR, 'env'))
+env.read_env(BASE_DIR / '.env')
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -44,8 +46,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'allauth', # No idea what this is for, I missed that
+    'allauth.account', # No idea what this is for, I missed that
 ]
 
+SITE_ID = 1
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -54,20 +60,39 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "allauth.account.middleware.AccountMiddleware", # No idea what this is for, I missed that
 ]
 
+# Authentication backends
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# Allouth settings:
+ACCOUNT_LOGIN_METHODS = ['username','email']
+ACCOUNT_SIGNUP_FIELDS = ['username*', 'email*', 'password1*', 'password2*']
+ACCOUNT_EMAIL_VERIFICATION ="mandatory"
+ACCOUNT_USERNAME_MIN_LENGTH = 4
+
 ROOT_URLCONF = 'restaurant.urls'
+
+LOGIN_URL = 'account_login'
+LOGIN_REDIRECT_URL = '/' 
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.request',
             ],
         },
     },
@@ -85,6 +110,9 @@ DATABASES = {
         'NAME': env.str("DB_NAME"),
         'USER': env.str("DB_USER"),
         'PASSWORD': env.str("DB_PASSWORD"),
+        # 'SECRET_KEY': SECRET_KEY,
+        'HOST': env.str("DB_HOST", "localhost"),
+        'PORT': env.str("DB_PORT", 5432)
     }
 }
 
@@ -124,6 +152,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR/"static"
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
